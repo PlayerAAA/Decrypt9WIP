@@ -12,27 +12,27 @@
 u32 ScrollOutput()
 {
     u32 log_start = LogWrite(NULL);
-    
+
     // careful, these areas are used by other functions in Decrypt9
     char** logptr = (char**) 0x21100000;
     char* logtext = (char*)  0x21200000;
     u32 log_size = FileGetData(LOG_FILE, logtext, 1024 * 1024, log_start); // log size
     u32 l_total = 0; // total lines
     u32 l_curr = 0; // current line
-    
+
     // read log file (second time)
     log_size = FileGetData(LOG_FILE, logtext, 1024 * 1024, log_start);
-    
+
     // allow 1MB of text max
     if ((log_size == 0) || (log_size >= 1024 * 1024))
         return 0;
-    
+
     // organize lines
     logtext[log_size - 1] = '\0';
     logptr[l_total++] = logtext;
     for (char* line = strchr(logtext, '\n'); line != NULL && l_total < 4000; line = strchr(line, '\n')) {
         *line = '\0';
-        logptr[l_total++] = ++line; 
+        logptr[l_total++] = ++line;
     }
     if (l_total >= 4000) // allow 4000 lines of text max
         return 0;
@@ -53,7 +53,7 @@ u32 ScrollOutput()
             return pad_state;
         }
     }
-    
+
     return 0;
 }
 #endif
@@ -61,25 +61,25 @@ u32 ScrollOutput()
 u32 UnmountSd()
 {
     u32 pad_state;
-    
+
     #ifdef USE_THEME
     LoadThemeGfx(GFX_UNMOUNT, false);
     DeinitFS();
     #else
     DebugClear();
-    Debug("Unmounting SD card...");
+    Debug("Desmonatando la tarjeta SD...");
     DeinitFS();
-    Debug("SD is unmounted, you may remove it now.");
-    Debug("Put the SD card back in before pressing B!");
+    Debug("La tarjeta SD ha sido desmontada, puedes removerla ahora.");
+    Debug("¡Inserta la tarjeta SD antes de pulsar B!");
     Debug("");
-    Debug("(B to return, START to reboot)");
+    Debug("(B para volver, START para reiniciar)");
     #endif
     while (true) {
         pad_state = InputWait();
         if (((pad_state & BUTTON_B) && InitFS()) || (pad_state & BUTTON_START))
             break;
     }
-    
+
     return pad_state;
 }
 
@@ -91,26 +91,26 @@ void DrawMenu(MenuInfo* currMenu, u32 index, bool fullDraw, bool subMenu)
     u32 menublock_x1 = (top_screen) ? 52 : 12;
     u32 menublock_y0 = 40;
     u32 menublock_y1 = menublock_y0 + currMenu->n_entries * 10;
-    
+
     if (fullDraw) { // draw full menu
         ClearScreenFull(true, !top_screen);
         DrawStringF(menublock_x0, menublock_y0 - 20, top_screen, "%s", currMenu->name);
         DrawStringF(menublock_x0, menublock_y0 - 10, top_screen, "==============================");
         DrawStringF(menublock_x0, menublock_y1 +  0, top_screen, "==============================");
-        DrawStringF(menublock_x0, menublock_y1 + 10, top_screen, (subMenu) ? "A: Choose  B: Return" : "A: Choose");
-        DrawStringF(menublock_x0, menublock_y1 + 20, top_screen, "SELECT: Unmount SD Card");
-        DrawStringF(menublock_x0, menublock_y1 + 30, top_screen, "START:  Reboot / [+\x1B] Poweroff");
-        DrawStringF(menublock_x1, SCREEN_HEIGHT - 20, top_screen, "SD card: %lluMB/%lluMB & %s", RemainingStorageSpace() / 1024 / 1024, TotalStorageSpace() / 1024 / 1024, (emunand_state == EMUNAND_READY) ? "EmuNAND ready" : (emunand_state == EMUNAND_GATEWAY) ? "GW EmuNAND" : (emunand_state == EMUNAND_REDNAND) ? "RedNAND" : (emunand_state > 3) ? "MultiNAND" : "no EmuNAND");
-        DrawStringF(menublock_x1, SCREEN_HEIGHT - 30, top_screen, "Game directory: %s", GAME_DIR);
+        DrawStringF(menublock_x0, menublock_y1 + 10, top_screen, (subMenu) ? "A: Elegir  B: Volver" : "A: Elegir");
+        DrawStringF(menublock_x0, menublock_y1 + 20, top_screen, "SELECT: Desmontar la tarjeta SD");
+        DrawStringF(menublock_x0, menublock_y1 + 30, top_screen, "START:  Reiniciar / [+\x1B] Apagar");
+        DrawStringF(menublock_x1, SCREEN_HEIGHT - 20, top_screen, "Tarjeta SD: %lluMB/%lluMB & %s", RemainingStorageSpace() / 1024 / 1024, TotalStorageSpace() / 1024 / 1024, (emunand_state == EMUNAND_READY) ? "EmuNAND lista" : (emunand_state == EMUNAND_GATEWAY) ? "GW EmuNAND" : (emunand_state == EMUNAND_REDNAND) ? "RedNAND" : (emunand_state > 3) ? "MultiNAND" : "no EmuNAND");
+        DrawStringF(menublock_x1, SCREEN_HEIGHT - 30, top_screen, "Directorio de juego: %s", GAME_DIR);
         if (DirOpen(WORK_DIR)) {
-            DrawStringF(menublock_x1, SCREEN_HEIGHT - 40, top_screen, "Work directory: %s", WORK_DIR);
+            DrawStringF(menublock_x1, SCREEN_HEIGHT - 40, top_screen, "Directorio de trabajo: %s", WORK_DIR);
             DirClose();
         }
     }
-    
+
     if (!top_screen)
         DrawStringF(10, 10, true, "Selected: %-*.*s", 32, 32, currMenu->entries[index].name);
-        
+
     for (u32 i = 0; i < currMenu->n_entries; i++) { // draw menu entries / selection []
         char* name = currMenu->entries[i].name;
         DrawStringF(menublock_x0, menublock_y0 + (i*10), top_screen, (i == index) ? "[%s]" : " %s ", name);
@@ -123,10 +123,10 @@ u32 ProcessEntry(MenuEntry* entry)
     bool nand_force = entry->param & N_FORCEEMU;
     bool nand_write = entry->param & N_NANDWRITE;
     bool a9lh_write = (entry->param & N_A9LHWRITE) && ((*(u32*) 0x101401C0) == 0);
-    
+
     u32 pad_state;
     u32 res = 0;
-    
+
     // unlock sequence for dangerous features
     if (nand_write || a9lh_write) {
         const u32 unlockSequences[3][5] = {
@@ -142,21 +142,21 @@ u32 ProcessEntry(MenuEntry* entry)
         LoadThemeGfx((emunand) ? GFX_DANGER_E : GFX_DANGER_S, false);
         #endif
         DebugClear();
-        Debug("You selected [%s].", entry->name);
+        Debug("Has seleccionado [%s].", entry->name);
         Debug("");
         if (!a9lh_write) {
-            DebugColor(warnColor, "This feature writes to the %s.", (emunand) ? "EmuNAND" : "SysNAND");
-            DebugColor(warnColor, "This may overwrite important data!");
+            DebugColor(warnColor, "Esta operacion escribira datos en %s.", (emunand) ? "EmuNAND" : "SysNAND");
+            DebugColor(warnColor, "¡Esto puede sobreescribir datos importantes!");
         } else {
-            DebugColor(warnColor, "!!! THIS WILL OVERWRITE THE A9LH !!!");
-            DebugColor(warnColor, "!!! INSTALLATION IN YOUR SYSNAND !!!");
+            DebugColor(warnColor, "ESTO SOBREESCRIBIRA LA INSTALACION!!!");
+            DebugColor(warnColor, "DE A9LH EN TU SYSNAND!!!");
         }
         Debug("");
-        Debug("If you wish to proceed, enter:");
-        Debug((emunand) ? "<Left>, <Right>, <Down>, <Up>, <A>" : (a9lh_write) ? "<Right>, <Down>, <Left>, <Down>, <A>" : 
-            "<Left>, <Up>, <Right>, <Up>, <A>");
+        Debug("Si decides continuar, presiona los siguientes botones:");
+        Debug((emunand) ? "<Izquierda>, <Derecha>, <Abajo>, <Arriba>, <A>" : (a9lh_write) ? "<Derecha>, <Abajo>, <Izquierda>, <Abajo>, <A>" :
+            "<Izquierda>, <Arriba>, <Derecha>, <Arriba>, <A>");
         Debug("");
-        Debug("(B to return, START to reboot)");
+        Debug("(B para volver, START para reiniciar)");
         while (true) {
             ShowProgress(unlockLvl, unlockLvlMax);
             if (unlockLvl == unlockLvlMax)
@@ -175,17 +175,17 @@ u32 ProcessEntry(MenuEntry* entry)
         if (unlockLvl < unlockLvlMax)
             return pad_state;
     }
-    
+
     // execute this entries function
     #ifdef USE_THEME
     LoadThemeGfx(GFX_PROGRESS, false);
     #endif
     DebugClear();
-    Debug("Selected: [%s]", entry->name);
+    Debug("Seleccionado: [%s]", entry->name);
     res = (SetNand(emunand, nand_force) == 0) ? (*(entry->function))(entry->param) : 1;
     DebugColor((res == 0) ? COLOR_GREEN : COLOR_RED, "%s: %s!", entry->name, (res == 0) ? "succeeded" : "failed");
     Debug("");
-    Debug("Press B to return, START to reboot.");
+    Debug("B para volver, START para reiniciar.");
     #ifdef USE_THEME
     LoadThemeGfx((res == 0) ? GFX_DONE : GFX_FAILED, false);
     #endif
@@ -198,7 +198,7 @@ u32 ProcessEntry(MenuEntry* entry)
         }
         #endif
     }
-    
+
     // returns the last known pad_state
     return pad_state;
 }
@@ -229,7 +229,7 @@ u32 ProcessMenu(MenuInfo* info, u32 n_entries_main)
     u32 menuLvl;
     u32 index = 0;
     u32 result = MENU_EXIT_REBOOT;
-    
+
     #ifndef USE_THEME
     MenuInfo mainMenu;
     if (n_entries_main > 1) {
@@ -244,7 +244,7 @@ u32 ProcessMenu(MenuInfo* info, u32 n_entries_main)
         }
         mainMenu.n_entries = n_entries_main;
         #ifndef BUILD_NAME
-        mainMenu.name = "Decrypt9 Main Menu";
+        mainMenu.name = "Menu principal de Decrypt9";
         #else
         mainMenu.name = BUILD_NAME;
         #endif
@@ -262,7 +262,7 @@ u32 ProcessMenu(MenuInfo* info, u32 n_entries_main)
     LoadThemeGfxMenu(0);
     #endif
     menuLvl = menuLvlMin;
-    
+
     // main processing loop
     while (true) {
         bool full_draw = true;
@@ -312,6 +312,6 @@ u32 ProcessMenu(MenuInfo* info, u32 n_entries_main)
         LoadThemeGfxMenu(((currMenu - info) * 100) + index);
         #endif
     }
-    
+
     return result;
 }
