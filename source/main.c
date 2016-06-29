@@ -99,7 +99,7 @@ MenuInfo menu[] =
             { "Descifrar/Cifrar Key Database",      &CryptKeyDb,            0 }
         }
     },
-    //  everything below is not contained in the main menu
+    // everything below is not contained in the main menu
     {
         "Opciones de copia/restauracion (SysNand)", 6, // ID 0
         {

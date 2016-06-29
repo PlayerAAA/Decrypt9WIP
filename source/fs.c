@@ -27,10 +27,10 @@ void DeinitFS()
 bool DebugCheckFreeSpace(size_t required)
 {
     if (required > RemainingStorageSpace()) {
-        Debug("Not enough space left on SD card");
+        Debug("No hay espacio suficiente en la tarjeta SD");
         return false;
     }
-    
+
     return true;
 }
 
@@ -55,12 +55,12 @@ bool FileOpen(const char* path)
 
 bool DebugFileOpen(const char* path)
 {
-    Debug("Opening %s ...", path);
+    Debug("Abriendo %s ...", path);
     if (!FileOpen(path)) {
-        Debug("Could not open %s", path);
+        Debug("No se pudo abrir %s", path);
         return false;
     }
-    
+
     return true;
 }
 
@@ -81,9 +81,9 @@ bool FileCreate(const char* path, bool truncate)
 }
 
 bool DebugFileCreate(const char* path, bool truncate) {
-    Debug("%s %s ...", truncate ? "Creating" : "Opening", path);
+    Debug("%s %s ...", truncate ? "Creando" : "Abriendo", path);
     if (!FileCreate(path, truncate)) {
-        Debug("Could not create %s", path);
+        Debug("No se pudo crear %s", path);
         return false;
     }
 
@@ -143,10 +143,10 @@ size_t FileRead(void* buf, size_t size, size_t foffset)
 bool DebugFileRead(void* buf, size_t size, size_t foffset) {
     size_t bytesRead = FileRead(buf, size, foffset);
     if(bytesRead != size) {
-        Debug("File too small or SD failure");
+        Debug("Archivo muy pequeño o fallo de la SD");
         return false;
     }
-    
+
     return true;
 }
 
@@ -166,10 +166,10 @@ bool DebugFileWrite(void* buf, size_t size, size_t foffset)
 {
     size_t bytesWritten = FileWrite(buf, size, foffset);
     if(bytesWritten != size) {
-        Debug("SD failure or SD full");
+        Debug("Fallo de la SD o SD llena");
         return false;
     }
-    
+
     return true;
 }
 
@@ -192,12 +192,12 @@ bool DirMake(const char* path)
 
 bool DebugDirMake(const char* path)
 {
-    Debug("Creating dir %s ...", path);
+    Debug("Creando directorio %s ...", path);
     if (!DirMake(path)) {
-        Debug("Could not create %s!", path);
+        Debug("¡No se pudo crear %s!", path);
         return false;
     }
-    
+
     return true;
 }
 
@@ -208,12 +208,12 @@ bool DirOpen(const char* path)
 
 bool DebugDirOpen(const char* path)
 {
-    Debug("Opening %s ...", path);
+    Debug("Abriendo %s ...", path);
     if (!DirOpen(path)) {
-        Debug("Could not open %s!", path);
+        Debug("¡No se pudo abrir %s!", path);
         return false;
     }
-    
+
     return true;
 }
 
@@ -243,11 +243,11 @@ bool GetFileListWorker(char** list, int* lsize, char* fpath, int fsize, bool rec
     FILINFO fno;
     char* fname = fpath + strnlen(fpath, fsize - 1);
     bool ret = false;
-    
+
     if (f_opendir(&pdir, fpath) != FR_OK)
         return false;
     (fname++)[0] = '/';
-    
+
     while (f_readdir(&pdir, &fno) == FR_OK) {
         if ((strncmp(fno.fname, ".", 2) == 0) || (strncmp(fno.fname, "..", 3) == 0))
             continue; // filter out virtual entries
@@ -257,7 +257,7 @@ bool GetFileListWorker(char** list, int* lsize, char* fpath, int fsize, bool rec
             break;
         } else if ((inc_files && !(fno.fattrib & AM_DIR)) || (inc_dirs && (fno.fattrib & AM_DIR))) {
             snprintf(*list, *lsize, "%s\n", fpath);
-            for(;(*list)[0] != '\0' && (*lsize) > 1; (*list)++, (*lsize)--); 
+            for(;(*list)[0] != '\0' && (*lsize) > 1; (*list)++, (*lsize)--);
             if ((*lsize) <= 1) break;
         }
         if (recursive && (fno.fattrib & AM_DIR)) {
@@ -266,7 +266,7 @@ bool GetFileListWorker(char** list, int* lsize, char* fpath, int fsize, bool rec
         }
     }
     f_closedir(&pdir);
-    
+
     return ret;
 }
 
@@ -300,7 +300,7 @@ size_t FileGetData(const char* path, void* buf, size_t size, size_t foffset)
         f_close(&tmp_file);
         return (res) ? bytes_read : 0;
     }
-    
+
     return 0;
 }
 
@@ -318,7 +318,7 @@ size_t FileDumpData(const char* path, void* buf, size_t size)
     f_sync(&tmp_file);
     res = (f_write(&tmp_file, buf, size, &bytes_written) == FR_OK);
     f_close(&tmp_file);
-    
+
     return (res) ? bytes_written : 0;
 }
 
@@ -328,7 +328,7 @@ size_t LogWrite(const char* text)
     static FIL lfile;
     static bool lready = false;
     static size_t lstart = 0;
-    
+
     if ((text == NULL) && lready) {
         f_close(&lfile);
         lready = false;
@@ -336,7 +336,7 @@ size_t LogWrite(const char* text)
     } else if (text == NULL) {
         return 0;
     }
-    
+
     if (!lready) {
         unsigned flags = FA_READ | FA_WRITE | FA_OPEN_ALWAYS;
         lready = (f_open(&lfile, LOG_FILE, flags) == FR_OK);
@@ -345,15 +345,15 @@ size_t LogWrite(const char* text)
         f_lseek(&lfile, lstart);
         f_sync(&lfile);
     }
-    
+
     const char newline = '\n';
     UINT bytes_written;
-    UINT tlen = strnlen(text, 128); 
+    UINT tlen = strnlen(text, 128);
     f_write(&lfile, text, tlen, &bytes_written);
     if (bytes_written != tlen) return 0;
     f_write(&lfile, &newline, 1, &bytes_written);
     if (bytes_written != 1) return 0;
-    
+
     return f_size(&lfile); // return the current position
     #else
     return 0;

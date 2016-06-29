@@ -67,7 +67,7 @@ u32 UnmountSd()
     DeinitFS();
     #else
     DebugClear();
-    Debug("Desmontando la tarjeta SD...");
+    Debug("Desmonatando la tarjeta SD...");
     DeinitFS();
     Debug("La tarjeta SD ha sido desmontada, puedes removerla ahora.");
     Debug("¡Inserta la tarjeta SD antes de pulsar B!");
